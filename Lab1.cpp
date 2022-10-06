@@ -11,7 +11,6 @@ const char LEAST_SQUARE_POINTS_PATH[6][PATH_SIZE] = {
 	"points_LeastSquares\\points5.txt"
 };
 
-void lab1();
 void model1(int k);
 void model1_closed_form(int k);
 void model2(int k);

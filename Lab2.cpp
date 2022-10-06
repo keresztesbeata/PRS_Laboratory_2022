@@ -13,7 +13,6 @@ const char RANSAC_POINTS_PATH[6][PATH_SIZE] = {
 	"points_RANSAC\\points5.bmp"			// q = 0.6
 };
 
-void lab2();
 /*
 * Apply the RANSAC algorithm for fitting the line to the data points.
 * k = index of the input file
