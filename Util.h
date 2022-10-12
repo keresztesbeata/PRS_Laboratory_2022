@@ -1,7 +1,7 @@
 #pragma once
 
 #include "stdafx.h"
-#include "Line.h"
+#include "Algorithms.h"
 
 // UTIL
 #define PATH_SIZE 100

@@ -11,6 +11,7 @@ public:
 public:
 	// default constructor
 	Line();
+	Line(int x1, int x2, float teta_0, float teta_1);
 	/*
 	* Compute the equation of the line (params a, b, c) which passes through the 2 given points, p1 and p2.
 	* ax + by + c = 0

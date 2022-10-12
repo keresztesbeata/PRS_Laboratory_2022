@@ -93,17 +93,7 @@ void model1(int k) {
 	float teta_0 = 0;
 	float teta_1 = 0;
 
-	float sxy = 0, sx = 0, sy = 0, sx2 = 0;
-
-	for (int i = 0; i < N; i++) {
-		sxy += points[i].x * points[i].y;
-		sx += points[i].x;
-		sx2 += points[i].x * points[i].x;
-		sy += points[i].y;
-	}
-
-	teta_1 = (N * sxy - sx * sy) / (N * sx2 - sx * sx);
-	teta_0 = (sy - teta_1 * sx) / N;
+	leastMeanSquares(points, teta_0, teta_1);
 
 	int x1 = 0;
 	int x2 = width - 1;
@@ -114,7 +104,6 @@ void model1(int k) {
 
 	imshow("Model 1", img);
 	waitKey();
-	getchar();
 }
 
 void model1_closed_form(int k) {
@@ -234,9 +223,6 @@ void model3(int k) {
 	float b = beta.at<float>(1, 0);
 	float c = beta.at<float>(2, 0);
 
-	std::cout << a << " " << b << " " << c << std::endl;
-	getchar();
-
 	int x1 = 0;
 	int x2 = width - 1;
 
@@ -260,16 +246,11 @@ void gradient_descent_1(int k, float lr) {
 	const int height = 500;
 	const int width = 500;
 
-	float sxy = 0, sx = 0, sy = 0, sx2 = 0;
-	for (int i = 0; i < N; i++) {
-		sxy += points[i].x * points[i].y;
-		sx += points[i].x;
-		sx2 += points[i].x * points[i].x;
-		sy += points[i].y;
-	}
 	// final (optimal) parameters for the line
-	float teta_1 = (N * sxy - sx * sy) / (N * sx2 - sx * sx);
-	float teta_0 = (sy - teta_1 * sx) / N;
+	float teta_0 = 0;
+	float teta_1 = 0;
+
+	leastMeanSquares(points, teta_0, teta_1);
 
 	int x1 = 0;
 	int x2 = width - 1;

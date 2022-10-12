@@ -3,6 +3,18 @@
 #include "stdafx.h"
 #include "Line.h"
 
+
+Line::Line(int x1, int x2, float teta_0, float teta_1) {
+	int y1 = teta_0 + x1 * teta_1;
+	int y2 = teta_0 + x2 * teta_1;
+
+	Point2f p1 = Point(x1, y1);
+	Point2f p2 = Point(x2, y2);
+	this->a = p1.y - p2.y;
+	this->b = p2.x - p1.x;
+	this->c = p1.x * p2.y - p2.x * p1.y;
+}
+
 Line::Line() {
 	this->a = 0;
 	this->b = 0;
