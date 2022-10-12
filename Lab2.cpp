@@ -85,22 +85,22 @@ void ransac(int k, int t, int s, float p, float q) {
 	Point2f p1 = points[rand() % N];
 	Point2f p2 = points[rand() % N];
 
-	Line * optLine = NULL;
+	Line * optLine = new Line();
 	int maxInliers = 0;
 	int nrTrials = calculateNrTrials(s, p, q);
 	for (int l = 0; l < nrTrials; l++) {
 		// compute the line eq
-		Line * line = computeLineEq(p1, p2);
+		Line * line = new Line(p1, p2);
 
 		// find the dist of each point to the line and count the nr of inliers
 		int inliers = 0;
 		for (int i = 0; i < N; i++) {
-			if (distPointToLine(points[i], *line) < t) {
+			if (line->distPointToLine(points[i]) < t) {
 				inliers++;
 			}
 		}
 		if (inliers > maxInliers) {
-			optLine = cloneLine(*line);
+			optLine = line->clone();
 			maxInliers = inliers;
 		}
 
@@ -114,7 +114,7 @@ void ransac(int k, int t, int s, float p, float q) {
 	Mat dest = initializeCanvas(height, width);
 	drawPoints(dest, points);
 	if (optLine != NULL) {
-		drawLine(dest, *optLine);
+		optLine->draw(dest);
 	}
 
 	imshow("Ransac method", dest);
