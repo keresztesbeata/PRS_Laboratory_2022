@@ -38,7 +38,7 @@ int calculateNrTrials(int s, float p, float q);
 int calculateConsensusThreshold(int n, float q);
 
 
-int main()
+int main2()
 {
 	int op;
 	do

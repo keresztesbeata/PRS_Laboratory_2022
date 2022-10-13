@@ -3,6 +3,11 @@
 #include "stdafx.h"
 #include "Line.h"
 
+Line::Line(float ro, float theta) {
+	// create a line using polar coord
+	this->ro = ro;
+	this->theta = theta;
+}
 
 Line::Line(int x1, int x2, float teta_0, float teta_1) {
 	int y1 = teta_0 + x1 * teta_1;
@@ -15,16 +20,18 @@ Line::Line(int x1, int x2, float teta_0, float teta_1) {
 	this->c = p1.x * p2.y - p2.x * p1.y;
 }
 
-Line::Line() {
-	this->a = 0;
-	this->b = 0;
-	this->c = 0;
-}
-
 Line::Line(Point2f p1, Point2f p2) {
 	this->a = p1.y - p2.y;
 	this->b = p2.x - p1.x;
 	this->c = p1.x * p2.y - p2.x * p1.y;
+}
+
+Line::Line() {
+	this->a = 0;
+	this->b = 0;
+	this->c = 0;
+	this->ro = 0;
+	this->theta = 0;
 }
 
 float Line::distPointToLine(Point2f p) {
@@ -41,10 +48,22 @@ void Line::draw(Mat& img) {
 	line(img, Point(x1, y1), Point(x2, y2), Scalar(0, 255, 0));
 }
 
+void Line::drawPolar(Mat& img) {
+	int x1 = 0;
+	int y1 = 0;
+	int x2 = ro * cos(this->theta);
+	int y2 = ro * sin(this->theta);
+
+	// draw a red line
+	line(img, Point(x1, y1), Point(x2, y2), Scalar(255, 0, 0));
+}
+
 Line* Line::clone() {
 	Line* copy = new Line();
 	copy->a = this->a;
 	copy->b = this->b;
 	copy->c = this->c;
+	copy->ro = this->ro;
+	copy->theta = this->theta;
 	return copy;
 }
