@@ -28,7 +28,7 @@ std::vector<Point2f> getEdgePoints(Mat img, bool doComputeEdges);
 std::vector<Peak> getLocalPeaks(Mat H, int n);
 Mat drawPeakLines(Mat img, std::vector<Peak> peaks);
 
-int main()
+int lab3()
 {
 	int stop = 0;
 	do
