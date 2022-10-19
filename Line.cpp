@@ -49,13 +49,14 @@ void Line::draw(Mat& img) {
 }
 
 void Line::drawPolar(Mat& img) {
-	int x1 = 0;
-	int y1 = 0;
-	int x2 = ro * cos(this->theta);
-	int y2 = ro * sin(this->theta);
-
-	// draw a red line
-	line(img, Point(x1, y1), Point(x2, y2), Scalar(255, 0, 0));
+	double a = cos(this->theta), b = sin(this->theta);
+	double x0 = a * this->ro, y0 = b * this->ro;
+	Point2f p1, p2;
+	p1.x = cvRound(x0 + 1000 * (-b));
+	p1.y = cvRound(y0 + 1000 * (a));
+	p2.x = cvRound(x0 - 1000 * (-b));
+	p2.y = cvRound(y0 - 1000 * (a));
+	line(img, p1, p2, Scalar(0, 0, 255));
 }
 
 Line* Line::clone() {

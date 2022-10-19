@@ -14,12 +14,12 @@ const char PM_IMAGES_PATH[3][PATH_SIZE] = {
 	"images_DT_PM\\PatternMatching\\unknown_object2.bmp"
 };
 
-Mat distanceTransform(Mat img);
-float matchingScore(Mat templ, Mat img);
-float matchingScoreWithAlignImageCenter(Mat templ, Mat img);
+Mat distanceTransform(Mat img, int wHV, int wD);
+float matchingScore(Mat templ, Mat img, int wHV, int wD);
+float matchingScoreWithAlignImageCenter(Mat templ, Mat img, int wHV, int wD);
 Point2f findCenterOfMass(Mat img);
 
-int main()
+int main4()
 {
 	int op;
 	do
@@ -36,30 +36,40 @@ int main()
 		switch (op)
 		{
 		case 1: {
-			printf("k = 0 => contour 1\n");
-			printf("k = 1 => contour 2\n");
-			printf("k = 2 => contour 3\n");
+			printf("k = 1 => contour 1\n");
+			printf("k = 2 => contour 2\n");
+			printf("k = 3 => contour 3\n");
 			int k;
 			printf("k = ");
 			scanf("%d", &k);
-			Mat img = imread(DT_IMAGES_PATH[k], IMREAD_GRAYSCALE);
-			Mat DT = distanceTransform(img);
+			int wHV, wD;
+			printf("wHV = ");
+			scanf("%d", &wHV);
+			printf("wD = ");
+			scanf("%d", &wD);
+			Mat img = imread(DT_IMAGES_PATH[k-1], IMREAD_GRAYSCALE);
+			Mat DT = distanceTransform(img, wHV, wD);
 			imshow("DT", DT);
 			waitKey();
 			break;
 		}
 		case 2: {
+			int wHV, wD;
+			printf("wHV = ");
+			scanf("%d", &wHV);
+			printf("wD = ");
+			scanf("%d", &wD);
 			Mat templ = imread(PM_IMAGES_PATH[0], IMREAD_GRAYSCALE);
 			Mat obj1 = imread(PM_IMAGES_PATH[1], IMREAD_GRAYSCALE);
 			Mat obj2 = imread(PM_IMAGES_PATH[2], IMREAD_GRAYSCALE);
-			float msc1 = matchingScore(templ, obj1);
+			float msc1 = matchingScore(templ, obj1, wHV, wD);
 			printf("Matching score between <template, obj1> = %.2f\n", msc1);
-			float msc2 = matchingScore(templ, obj2);
+			float msc2 = matchingScore(templ, obj2, wHV, wD);
 			printf("Matching score between <template, obj2> = %.2f\n", msc2);
 			printf("--------------------Reverse---------------------\n");
-			float msc1R = matchingScore(obj1, templ);
+			float msc1R = matchingScore(obj1, templ, wHV, wD);
 			printf("Matching score between <obj1, template> = %.2f\n", msc1R);
-			float msc2R = matchingScore(obj2, templ);
+			float msc2R = matchingScore(obj2, templ, wHV, wD);
 			printf("Matching score between <obj2, template> = %.2f\n", msc2R);
 			getchar();
 			getchar();
@@ -67,17 +77,22 @@ int main()
 		}
 
 		case 3: {
+			int wHV, wD;
+			printf("wHV = ");
+			scanf("%d", &wHV);
+			printf("wD = ");
+			scanf("%d", &wD);
 			Mat templ = imread(PM_IMAGES_PATH[0], IMREAD_GRAYSCALE);
 			Mat obj1 = imread(PM_IMAGES_PATH[1], IMREAD_GRAYSCALE);
 			Mat obj2 = imread(PM_IMAGES_PATH[2], IMREAD_GRAYSCALE);
-			float msc1 = matchingScoreWithAlignImageCenter(templ, obj1);
+			float msc1 = matchingScoreWithAlignImageCenter(templ, obj1, wHV, wD);
 			printf("Matching score between <template, obj1> = %.2f\n", msc1);
-			float msc2 = matchingScoreWithAlignImageCenter(templ, obj2);
+			float msc2 = matchingScoreWithAlignImageCenter(templ, obj2, wHV, wD);
 			printf("Matching score between <template, obj2> = %.2f\n", msc2);
 			printf("--------------------Reverse---------------------\n");
-			float msc1R = matchingScoreWithAlignImageCenter(obj1, templ);
+			float msc1R = matchingScoreWithAlignImageCenter(obj1, templ, wHV, wD);
 			printf("Matching score between <obj1, template> = %.2f\n", msc1R);
-			float msc2R = matchingScoreWithAlignImageCenter(obj2, templ);
+			float msc2R = matchingScoreWithAlignImageCenter(obj2, templ, wHV, wD);
 			printf("Matching score between <obj2, template> = %.2f\n", msc2R);
 			getchar();
 			getchar();
@@ -90,21 +105,49 @@ int main()
 	return 0;
 }
 
-Mat distanceTransform(Mat img) {
+Mat distanceTransform(Mat img, int wHV, int wD) {
 	int width = img.cols;
 	int height = img.rows;
 
 	Mat DT = img.clone();
+	// initialize
+	/*
+	for (int i = 0; i < height; i++) {
+		for (int j = 0; j < width; j++) {
+			if (img.at<uchar>(i, j) == 0) {
+				DT.at<uchar>(i, j) = 0;
+			}
+			else {
+				DT.at<uchar>(i, j) = 255;
+			}
+		}
+	}
+	*/
 
 	int di[8] = { -1,-1,-1,0,0,1,1,1 };
 	int dj[8] = { -1,0,1,-1,1,-1,0,1 };
-	int weight[8] = { 0,1,0,1,1,0,1,0 };
+	int weight[8] = { wD,wHV,wD,wHV,wHV,wD,wHV,wD };
 
+	// forward scan
 	for (int i = 1; i < height-1; i++) {
 		for (int j = 1; j < width-1; j++) {
-			int min = 255;
-			for (int k = 0; k < 8; k++) {
-				uchar pixel = img.at<uchar>(i + di[k], j + dj[k]);
+			int min = DT.at<uchar>(i, j);
+			for (int k = 0; k < 5; k++) {
+				uchar pixel = DT.at<uchar>(i + di[k], j + dj[k]);
+				if (pixel + weight[k] < min) {
+					min = pixel + weight[k];
+				}
+			}
+			DT.at<uchar>(i, j) = min;
+		}
+	}
+
+	// backward scan
+	for (int i = height-2; i > 0; i--) {
+		for (int j = width-2; j > 0; j--) {
+			int min = DT.at<uchar>(i, j);
+			for (int k = 4; k < 8; k++) {
+				uchar pixel = DT.at<uchar>(i + di[k], j + dj[k]);
 				if (pixel + weight[k] < min) {
 					min = pixel + weight[k];
 				}
@@ -116,8 +159,8 @@ Mat distanceTransform(Mat img) {
 	return DT;
 }
 
-float matchingScore(Mat templ, Mat img) {
-	Mat DT = distanceTransform(templ);
+float matchingScore(Mat templ, Mat img, int wHV, int wD) {
+	Mat DT = distanceTransform(templ, wHV, wD);
 	int width = img.cols;
 	int height = img.rows;
 
@@ -151,23 +194,28 @@ Point2f findCenterOfMass(Mat img) {
 }
 
 
-float matchingScoreWithAlignImageCenter(Mat templ, Mat obj) {
+float matchingScoreWithAlignImageCenter(Mat templ, Mat obj, int wHV, int wD) {
 	// translate the img w.r.t the template's center of mass
 	Point2f templCenter = findCenterOfMass(templ);
 	Point2f objCenter = findCenterOfMass(obj);
 
+	int data[] = {1,0,-templCenter.x,0,1,-templCenter.y, 0, 0, 1};
+
 	Point2f srcTri[3];
-	srcTri[0] = Point2f(0.f, 0.f);
-	srcTri[1] = Point2f(obj.cols - 1.f, 0.f);
-	srcTri[2] = Point2f(0.f, obj.rows - 1.f);
+	srcTri[0] = Point2f(1.f, 0.f);
+	srcTri[1] = Point2f(0.f, 1.0f);
+	srcTri[2] = Point2f(objCenter.x, objCenter.y);
 	Point2f dstTri[3];
-	dstTri[0] = Point2f(0.f, obj.rows * 0.33f);
-	dstTri[1] = Point2f(obj.cols * 0.85f, obj.rows * 0.25f);
-	dstTri[2] = Point2f(obj.cols * 0.15f, obj.rows * 0.7f);
-	Mat warp_mat = getAffineTransform(srcTri, dstTri);
+	dstTri[0] = Point2f(1.f, 0.f);
+	dstTri[1] = Point2f(0.f, 1.0f);
+	dstTri[2] = Point2f(templCenter.x, templCenter.y);
+	Mat M = getAffineTransform(srcTri, dstTri);
 
 	Mat warp_dst = Mat::zeros(obj.rows, obj.cols, obj.type());
-	warpAffine(obj, warp_dst, warp_mat, warp_dst.size());
+	warpAffine(obj, warp_dst, M, warp_dst.size());
 
-	return matchingScore(templ, obj);
+	imshow("Translated img", warp_dst);
+	waitKey();
+
+	return matchingScore(templ, warp_dst, wHV, wD);
 }

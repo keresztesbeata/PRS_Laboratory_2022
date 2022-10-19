@@ -26,9 +26,9 @@ std::vector<Point2f> getEdgePoints(Mat img, bool doComputeEdges);
 * Return the list of local peak points.
 */
 std::vector<Peak> getLocalPeaks(Mat H, int n);
-Mat drawPeakLines(Mat img, std::vector<Peak> peaks);
+Mat drawFirstKPeakLines(Mat img, std::vector<Peak> peaks, int k);
 
-int lab3()
+int main()
 {
 	int stop = 0;
 	do
@@ -36,20 +36,19 @@ int lab3()
 		system("cls");
 		destroyAllWindows();
 		printf("Hough transform for line detection:\n");
-		printf("k = 0 => edge simple\n");
-		printf("k = 1 => edge complex\n");
-		printf("k = 2 => image simple\n");
-		printf("k = 3 => image complex\n");
+		printf("k = 1 => edge simple\n");
+		printf("k = 2 => edge complex\n");
+		printf("k = 3 => image simple\n");
+		printf("k = 4 => image complex\n");
 		int k;
 		printf("k = ");
 		scanf("%d", &k);
-		Mat img = imread(HOUGH_IMAGES_PATH[k], CV_LOAD_IMAGE_GRAYSCALE);
+		Mat img = imread(HOUGH_IMAGES_PATH[k-1], CV_LOAD_IMAGE_GRAYSCALE);
 		std::vector<Point2f> edgePoints = getEdgePoints(img, (k>2));
 		Mat houghAcc = houghAccumulator(img, edgePoints);
 
 		Mat houghImg;
 		// normalize the hough accumulator before displaying it
-		//normalize(houghAcc, houghImg, 0, 1, NORM_MINMAX, -1);
 		double minVal, maxVal;
 		minMaxLoc(houghAcc, &minVal, &maxVal);
 		houghAcc.convertTo(houghImg, CV_8UC1, 255.f / maxVal);
@@ -61,19 +60,28 @@ int lab3()
 		printf("Filter size?\n n = ");
 		scanf("%d", &n);
 		std::vector<Peak> localPeaks = getLocalPeaks(houghAcc, n);
-
-		// get max peak
+		// sort the peaks in asc order
 		std::sort(localPeaks.begin(), localPeaks.end());
 
 		int N = localPeaks.size();
 
-		printf("Largest local maxima: %d\n", localPeaks[N-1].hval);
+		int K;
+		printf("K = \n");
+		scanf("%d", &K);
 
-		Mat outOrig = drawPeakLines(img, localPeaks);
+
+		// get K max peaks
+		printf("The K largest local maxima : \n");
+		for (int i = 0; i < K && N - i>0; i++) {
+			printf(" %d, ", localPeaks[N - 1 - i].hval);
+		}
+		printf("\n");
+
+		Mat outOrig = drawFirstKPeakLines(img, localPeaks, K);
 		imshow("Peak lines (original img)", outOrig);
 
-		Mat outH = drawPeakLines(houghImg, localPeaks);
-		imshow("Peak lines (hough)", outH);
+		Mat outHough = drawFirstKPeakLines(houghImg, localPeaks, K);
+		imshow("Peak lines (hough)", outHough);
 
 		waitKey();
 		getchar();
@@ -90,12 +98,13 @@ Mat houghAccumulator(Mat img, std::vector<Point2f> edgePoints) {
 	int D = sqrt(width * width + height * height); // image diagonal
 	Mat H(D + 1, 360, CV_32SC1);
 	H.setTo(0); // initialize accumulator
-	int dt = 1; // teta accuracy
+	int dt = 1; // theta accuracy
 	int roMax = D;
 	
 	for (Point2f e : edgePoints) {
 		for (int theta = 0; theta < 360; theta += dt) {
-			float ro = e.x * cos(theta) + e.y * sin(theta);
+			float thetaRad = theta * PI / 180.0;
+			float ro = e.x * cos(thetaRad) + e.y * sin(thetaRad);
 			if (ro >= 0 && ro <= roMax) {
 				H.at<int>(ro, theta)++;
 			}
@@ -143,33 +152,37 @@ std::vector<Peak> getLocalPeaks(Mat H, int n) {
 
 	for (int i = n; i < height-n; i++) {
 		for (int j = n; j < width-n; j++) {
-			int ro = i;
-			int theta = j;
 			int hval = H.at<int>(i, j);
+			bool ok = true;
 			for (int u = -n; u < n; u++) {
 				for (int v = -n; v < n; v++) {
 					if (H.at<int>(i + u, j + v) > hval) {
-						ro = i + u;
-						theta = j + v;
-						hval = H.at<int>(i + u, j + v);
+						ok = false;
 					}
 				}
 			}
-			localPeaks.push_back({ theta, ro, hval });
+			if (ok && hval > 0) {
+				int ro = i;
+				int theta = j;
+				localPeaks.push_back({ theta, ro, hval });
+			}
 		}
 	}
 	return localPeaks;
 }
 
-Mat drawPeakLines(Mat img, std::vector<Peak> peaks) {
+Mat drawFirstKPeakLines(Mat img, std::vector<Peak> peaks, int k) {
 	int height = img.rows;
 	int width = img.cols;
 	Mat out;
 	cvtColor(img, out, cv::COLOR_GRAY2RGB);
-
-	for (auto p : peaks) {
+	int N = peaks.size();
+	
+	for (int i = 0; i < k && i < N; i++) {
 		// draw a line
-		Line line(p.ro, p.theta);
+		Peak p = peaks[i];
+		float thetaRad = p.theta * PI / 180.0;
+		Line line(p.ro, thetaRad);
 		line.drawPolar(out);
 	}
 
