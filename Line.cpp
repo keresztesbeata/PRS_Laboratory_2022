@@ -49,13 +49,20 @@ void Line::draw(Mat& img) {
 }
 
 void Line::drawPolar(Mat& img) {
+	Point2f p1, p2;
+	/*
 	double a = cos(this->theta), b = sin(this->theta);
 	double x0 = a * this->ro, y0 = b * this->ro;
-	Point2f p1, p2;
 	p1.x = cvRound(x0 + 1000 * (-b));
 	p1.y = cvRound(y0 + 1000 * (a));
 	p2.x = cvRound(x0 - 1000 * (-b));
 	p2.y = cvRound(y0 - 1000 * (a));
+	*/
+	p1.x = 0;
+	p1.y = (this->ro - p1.x * cos(this->theta))/sin(this->theta);
+	p2.x = img.cols - 1;
+	p2.y = (this->ro - p2.x * cos(this->theta)) / sin(this->theta);
+	
 	line(img, p1, p2, Scalar(0, 0, 255));
 }
 

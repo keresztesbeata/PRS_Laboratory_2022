@@ -13,7 +13,7 @@ const char HOUGH_IMAGES_PATH[4][PATH_SIZE] = {
 
 typedef struct peak {
 	int theta, ro, hval;
-	bool operator < (const peak& o) const {
+	bool operator > (const peak& o) const {
 		return hval > o.hval;
 	}
 }Peak;
@@ -61,7 +61,7 @@ int main()
 		scanf("%d", &n);
 		std::vector<Peak> localPeaks = getLocalPeaks(houghAcc, n);
 		// sort the peaks in asc order
-		std::sort(localPeaks.begin(), localPeaks.end());
+		std::sort(localPeaks.begin(), localPeaks.end(), std::greater<Peak>());
 
 		int N = localPeaks.size();
 
@@ -72,8 +72,8 @@ int main()
 
 		// get K max peaks
 		printf("The K largest local maxima : \n");
-		for (int i = 0; i < K && N - i>0; i++) {
-			printf(" %d, ", localPeaks[N - 1 - i].hval);
+		for (int i = 0; i < K; i++) {
+			printf(" %d, ", localPeaks[i].hval);
 		}
 		printf("\n");
 
@@ -150,12 +150,14 @@ std::vector<Peak> getLocalPeaks(Mat H, int n) {
 		return localPeaks;
 	}
 
-	for (int i = n; i < height-n; i++) {
-		for (int j = n; j < width-n; j++) {
+	int w = n / 2;
+
+	for (int i = w; i < height-w; i++) {
+		for (int j = w; j < width-w; j++) {
 			int hval = H.at<int>(i, j);
 			bool ok = true;
-			for (int u = -n; u < n; u++) {
-				for (int v = -n; v < n; v++) {
+			for (int u = -w; u < w; u++) {
+				for (int v = -w; v < w; v++) {
 					if (H.at<int>(i + u, j + v) > hval) {
 						ok = false;
 					}
@@ -181,8 +183,7 @@ Mat drawFirstKPeakLines(Mat img, std::vector<Peak> peaks, int k) {
 	for (int i = 0; i < k && i < N; i++) {
 		// draw a line
 		Peak p = peaks[i];
-		float thetaRad = p.theta * PI / 180.0;
-		Line line(p.ro, thetaRad);
+		Line line(p.ro, p.theta * PI / 180);
 		line.drawPolar(out);
 	}
 
