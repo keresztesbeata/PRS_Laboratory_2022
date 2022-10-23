@@ -2,6 +2,7 @@
 
 #include "stdafx.h"
 #include "Algorithms.h"
+#include <fstream>
 
 // UTIL
 #define PATH_SIZE 100
