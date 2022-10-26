@@ -109,20 +109,8 @@ Mat distanceTransform(Mat img, int wHV, int wD) {
 	int width = img.cols;
 	int height = img.rows;
 
+		// initialize
 	Mat DT = img.clone();
-	// initialize
-	/*
-	for (int i = 0; i < height; i++) {
-		for (int j = 0; j < width; j++) {
-			if (img.at<uchar>(i, j) == 0) {
-				DT.at<uchar>(i, j) = 0;
-			}
-			else {
-				DT.at<uchar>(i, j) = 255;
-			}
-		}
-	}
-	*/
 
 	int di[8] = { -1,-1,-1,0,0,1,1,1 };
 	int dj[8] = { -1,0,1,-1,1,-1,0,1 };

@@ -17,7 +17,7 @@ void saveResults(std::vector<float> values, const char output_path[]);
 void saveResults(Mat values, const char output_path[]);
 void displayCorrelationChart(Mat featuresMat, int x1, int y1, int x2, int y2);
 
-int main()
+int main5()
 {
 	std::vector<Mat> images;
 	char fname[256];

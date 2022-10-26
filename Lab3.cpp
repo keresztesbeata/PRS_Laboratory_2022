@@ -28,7 +28,7 @@ std::vector<Point2f> getEdgePoints(Mat img, bool doComputeEdges);
 std::vector<Peak> getLocalPeaks(Mat H, int n);
 Mat drawFirstKPeakLines(Mat img, std::vector<Peak> peaks, int k);
 
-int main3()
+int main()
 {
 	int stop = 0;
 	do
@@ -133,7 +133,8 @@ std::vector<Point2f> getEdgePoints(Mat img, bool doComputeEdges) {
 		for (int j = 0; j < width; j++) {
 			if (edges.at<uchar>(i, j) == 255) {
 				// white point belongs to an edge
-				edgePoints.push_back(Point2f(i, j));
+				// reverse coordinates (x, y) <=> (j,i) when rendering
+				edgePoints.push_back(Point2f(j, i));
 			}
 		}
 	}
@@ -152,13 +153,14 @@ std::vector<Peak> getLocalPeaks(Mat H, int n) {
 
 	int w = n / 2;
 
-	for (int i = w; i < height-w; i++) {
-		for (int j = w; j < width-w; j++) {
+	// consider also the pixels on the image borders when computing the local maximums in order to not miss the line on the main diagonal with ro = 0
+	for (int i = 0; i < height; i++) {
+		for (int j = 0; j < width; j++) {
 			int hval = H.at<int>(i, j);
 			bool ok = true;
-			for (int u = -w; u < w; u++) {
-				for (int v = -w; v < w; v++) {
-					if (H.at<int>(i + u, j + v) > hval) {
+			for (int u = -w; u <= w; u++) {
+				for (int v = -w; v <= w; v++) {
+					if (i+u >= 0 && i+u < height && j + v >= 0 && j + v < width && H.at<int>(i + u, j + v) > hval) {
 						ok = false;
 					}
 				}
