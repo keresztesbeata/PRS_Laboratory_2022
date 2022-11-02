@@ -28,7 +28,7 @@ std::vector<Point2f> getEdgePoints(Mat img, bool doComputeEdges);
 std::vector<Peak> getLocalPeaks(Mat H, int n);
 Mat drawFirstKPeakLines(Mat img, std::vector<Peak> peaks, int k);
 
-int main()
+int main3()
 {
 	int stop = 0;
 	do

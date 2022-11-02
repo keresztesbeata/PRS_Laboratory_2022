@@ -15,9 +15,10 @@ const char CORR_MATRIX_FILE[PATH_SIZE] = "statistical_results/correlation_matrix
 
 void saveResults(std::vector<float> values, const char output_path[]);
 void saveResults(Mat values, const char output_path[]);
-void displayCorrelationChart(Mat featuresMat, int x1, int y1, int x2, int y2);
+void displayCorrelationChart(Mat featureMat, int x1, int y1, int x2, int y2);
+void pdfForSingleFeature(Mat featureMat, int x);
 
-int main5()
+int main()
 {
 	std::vector<Mat> images;
 	char fname[256];
@@ -53,21 +54,39 @@ int main5()
 
 	int op = 0;
 	do {
-		int x1, y1, x2, y2;
-		std::cout << "Coeff 1: " << std::endl;
-		std::cout << "x1 = ";
-		std::cin >> x1;
-		std::cout << "y1 = ";
-		std::cin >> y1;
-		std::cout << "Coeff 2: " << std::endl;
-		std::cout << "x2 = ";
-		std::cin >> x2;
-		std::cout << "y2 = ";
-		std::cin >> y2;
-		std::cout << "Correlation coefficient = " << corr.at<float>(IMG_SIZE*x1+y1, IMG_SIZE * x2 + y2) << std::endl;
-		displayCorrelationChart(featureMat, x1, y1, x2, y2);
-		std::cout << "Continue? (Exit = 0) \nop =";
+		std::cout << "Menu:" << std::endl;
+		std::cout << "1 - Correlation coefficient between 2 features" << std::endl;
+		std::cout << "2 - Plot prob density function for a single feature" << std::endl;
+		std::cout << "3 - Plot prob density function for 2 features" << std::endl;
+		std::cout << "0 - Exit" << std::endl;
 		std::cin >> op;
+		switch (op) { 
+			case 1: {
+				int x1, y1, x2, y2;
+				std::cout << "Coeff 1: " << std::endl;
+				std::cout << "x1 = ";
+				std::cin >> x1;
+				std::cout << "y1 = ";
+				std::cin >> y1;
+				std::cout << "Coeff 2: " << std::endl;
+				std::cout << "x2 = ";
+				std::cin >> x2;
+				std::cout << "y2 = ";
+				std::cin >> y2;
+				std::cout << "Correlation coefficient = " << corr.at<float>(IMG_SIZE * x1 + y1, IMG_SIZE * x2 + y2) << std::endl;
+				displayCorrelationChart(featureMat, x1, y1, x2, y2);
+				break;
+			}
+			case 2: {
+				int x;
+				std::cout << "Feature (= pixel nr): " << std::endl;
+				std::cout << "x = ";
+				std::cin >> x;
+				pdfForSingleFeature(featureMat, x);
+				break;
+			}
+			case 0: break;
+		}
 	} while (op != 0);
 
 	return 0;
@@ -183,22 +202,52 @@ void saveResults(Mat values, const char output_path[]) {
 	f.close();
 }
 
-void displayCorrelationChart(Mat featuresMat, int x1, int y1, int x2, int y2) {
+void displayCorrelationChart(Mat featureMat, int x1, int y1, int x2, int y2) {
 	Mat img(256, 256, CV_8UC1);
 	img.setTo(255);
 
-	int p = featuresMat.rows;
-	int N = featuresMat.cols;
+	int p = featureMat.rows;
+	int N = featureMat.cols;
 	int img_size = sqrt(N);
 
 	int i = img_size * x1 + y1;
 	int j = img_size * x2 + y2;
 
 	for (int k = 0; k < p; k++) {
-		int f1 = featuresMat.at<uchar>(k, i);
-		int f2 = featuresMat.at<uchar>(k, j);
+		int f1 = featureMat.at<uchar>(k, i);
+		int f2 = featureMat.at<uchar>(k, j);
 		img.at<uchar>(f1, f2) = 0;
 	}
 	imshow("Correlation chart", img);
+	waitKey();
+}
+
+void pdfForSingleFeature(Mat featureMat, int x) {
+	Mat img(256, 256, CV_8UC1);
+	img.setTo(255);
+
+	std::vector<float> means = computeMeanValues(featureMat);
+	std::vector<float> stdDevs = computeStdDeviation(featureMat);
+
+	float mean = means[x];
+	float stdDev = stdDevs[x];
+	std::vector<float> f; 
+
+	int p = featureMat.rows;
+	for (int k = 0; k < p; k++) {
+		int curr = featureMat.at<uchar>(k, x);
+		f.push_back(exp(-(curr - mean) * (curr - mean) / (2 * stdDev * stdDev)) / (sqrt(2 * PI) * stdDev));
+	}
+
+	float peak = *max_element(std::begin(f), std::end(f));
+	std::cout << peak << std::endl;
+
+	for (int k = 0; k < p; k++) {
+		int curr = featureMat.at<uchar>(k, x);
+		f[k] = f[k] * 255 / peak;
+		img.at<uchar>(f[k], curr) = 0;
+	}
+
+	imshow("Pdf for single feature", img);
 	waitKey();
 }

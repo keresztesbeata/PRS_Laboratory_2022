@@ -29,7 +29,7 @@ int main4()
 		printf("Menu:\n");
 		printf("1 - Chamfer based Distance Transform\n");
 		printf("2 - Pattern Matching using Distance Transform\n");
-		printf("3 - Pattern Matching using Distance Transform (align cneters)\n");
+		//printf("3 - Pattern Matching using Distance Transform (align cneters)\n");
 		printf("0 - Exit\n\n");
 		printf("Option: ");
 		scanf("%d", &op);
@@ -187,12 +187,12 @@ float matchingScoreWithAlignImageCenter(Mat templ, Mat obj, int wHV, int wD) {
 	Point2f templCenter = findCenterOfMass(templ);
 	Point2f objCenter = findCenterOfMass(obj);
 
-	int data[] = {1,0,-templCenter.x,0,1,-templCenter.y, 0, 0, 1};
+	int data[] = {1,0,templCenter.x,0,1,templCenter.y, 0, 0, 1};
 
 	Point2f srcTri[3];
 	srcTri[0] = Point2f(1.f, 0.f);
 	srcTri[1] = Point2f(0.f, 1.0f);
-	srcTri[2] = Point2f(objCenter.x, objCenter.y);
+	srcTri[2] = Point2f(-objCenter.x, -objCenter.y);
 	Point2f dstTri[3];
 	dstTri[0] = Point2f(1.f, 0.f);
 	dstTri[1] = Point2f(0.f, 1.0f);
