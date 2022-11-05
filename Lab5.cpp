@@ -17,8 +17,9 @@ void saveResults(std::vector<float> values, const char output_path[]);
 void saveResults(Mat values, const char output_path[]);
 void displayCorrelationChart(Mat featureMat, int x1, int y1, int x2, int y2);
 void pdfForSingleFeature(Mat featureMat, int x);
+void pdfFor2Features(Mat featureMat, int i, int j);
 
-int main()
+int main5()
 {
 	std::vector<Mat> images;
 	char fname[256];
@@ -83,6 +84,16 @@ int main()
 				std::cout << "x = ";
 				std::cin >> x;
 				pdfForSingleFeature(featureMat, x);
+				break;
+			}
+			case 3: {
+				int x, y;
+				std::cout << "Features (= pixel nr): " << std::endl;
+				std::cout << "x = ";
+				std::cin >> x;
+				std::cout << "y = ";
+				std::cin >> y;
+				pdfFor2Features(featureMat, x, y);
 				break;
 			}
 			case 0: break;
@@ -239,15 +250,37 @@ void pdfForSingleFeature(Mat featureMat, int x) {
 		f.push_back(exp(-(curr - mean) * (curr - mean) / (2 * stdDev * stdDev)) / (sqrt(2 * PI) * stdDev));
 	}
 
-	float peak = *max_element(std::begin(f), std::end(f));
-	std::cout << peak << std::endl;
+	float peak = 1.0 / (sqrt(2 * PI) * stdDev);
 
 	for (int k = 0; k < p; k++) {
 		int curr = featureMat.at<uchar>(k, x);
 		f[k] = f[k] * 255 / peak;
-		img.at<uchar>(f[k], curr) = 0;
+		img.at<uchar>(255 - f[k], curr) = 0;
 	}
 
 	imshow("Pdf for single feature", img);
+	waitKey();
+}
+
+void pdfFor2Features(Mat featureMat, int i, int j) {
+	Mat img(256, 256, CV_8UC1);
+	img.setTo(255);
+
+	std::vector<float> means = computeMeanValues(featureMat);
+	Mat cov = computeCovarianceMat(featureMat);
+
+	float mean_i = means[i];
+	float mean_j = means[j];
+
+	int N = sqrt(featureMat.cols);
+	Mat f(N,N,CV_32FC1);
+
+	int p = featureMat.rows;
+	for (int k = 0; k < p; k++) {
+		int xi = featureMat.at<uchar>(k, i);
+		int xj = featureMat.at<uchar>(k, j);
+	}
+
+	imshow("Pdf for a pair of features", img);
 	waitKey();
 }
