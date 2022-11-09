@@ -2,6 +2,7 @@
 
 #include "stdafx.h"
 #include "Algorithms.h"
+#include <cmath>
 #include <fstream>
 
 // UTIL
