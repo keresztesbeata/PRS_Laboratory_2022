@@ -25,9 +25,11 @@ int main()
 		switch (op) {
 		case 1: {
 			int k;
-			std::cout << "Select input data (2d => 0, 3d => 1): k = ";
+			std::cout << "Select input data:\n";
+			std::cout << "2 - 2D points" << std::endl;
+			std::cout << "3 - 3D points" << std::endl;
 			std::cin >> k;
-			Mat X = readInputPoints(DATA_PCA_PATH[k]);
+			Mat X = readInputPoints(DATA_PCA_PATH[k-2]);
 			std::vector<double> means = calculateMean(X);
 			int N = X.rows;
 			int D = X.cols;
@@ -79,6 +81,26 @@ int main()
 				std::cout << "max [" << i << "] = " << maxC[i] << std::endl;
 			}
 
+			int img_width = maxC[0] - minC[0] + 1;
+			int img_height = maxC[1] - minC[1] + 1;
+
+			std::cout << "height = " << img_height << std::endl;
+			std::cout << "width = " << img_width << std::endl;
+
+			Mat plot(img_height, img_width, CV_8SC1);
+			plot.setTo(255);
+			for (int i = 0; i < N; i++) {
+				int x = X_coeff.at<double>(i, 0) - minC[0];
+				int y = X_coeff.at<double>(i, 1) - minC[1];
+				if (k == 2) {
+					plot.at<uchar>(x, y) = 0;
+				}
+				else {
+					plot.at<uchar>(x, y) = (X_coeff.at<double>(i,2) - minC[2]) * 255 / maxC[2];
+				}
+			}
+			imshow("Visualize points", plot);
+			
 			waitKey(0);
 			break;
 		}
