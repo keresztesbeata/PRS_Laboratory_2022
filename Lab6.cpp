@@ -96,7 +96,7 @@ int main()
 					plot.at<uchar>(x, y) = 0;
 				}
 				else {
-					plot.at<uchar>(x, y) = (X_coeff.at<double>(i,2) - minC[2]) * 255 / maxC[2];
+					plot.at<uchar>(x, y) = (X_coeff.at<double>(i,2) - minC[2]) * 255 / (maxC[2] - minC[2]);
 				}
 			}
 			imshow("Visualize points", plot);
