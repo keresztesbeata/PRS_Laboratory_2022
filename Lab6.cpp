@@ -14,7 +14,7 @@ std::vector<double> calculateMean(Mat X);
 Mat PCAKthApproximation(Mat X, Mat Q, int k);
 double calculateMeanAbsDiff(Mat X, Mat Q);
 
-int main()
+int main6()
 {
 	int op = 0;
 	do {
@@ -90,6 +90,7 @@ int main()
 			Mat plot(img_height, img_width, CV_8SC1);
 			plot.setTo(255);
 			for (int i = 0; i < N; i++) {
+
 				int x = X_coeff.at<double>(i, 0) - minC[0];
 				int y = X_coeff.at<double>(i, 1) - minC[1];
 				if (k == 2) {

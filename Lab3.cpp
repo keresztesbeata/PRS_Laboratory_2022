@@ -60,7 +60,7 @@ int main3()
 		printf("Filter size?\n n = ");
 		scanf("%d", &n);
 		std::vector<Peak> localPeaks = getLocalPeaks(houghAcc, n);
-		// sort the peaks in asc order
+		// sort the peaks in desc order
 		std::sort(localPeaks.begin(), localPeaks.end(), std::greater<Peak>());
 
 		int N = localPeaks.size();

@@ -81,15 +81,16 @@ void ransac(int k, int t, int s, float p, float q) {
 	const int height = img.rows;
 	const int width = img.cols;
 
-	// choose 2 random points
-	Point2f p1 = points[rand() % N];
-	Point2f p2 = points[rand() % N];
 
 	Line * optLine = new Line();
 	int maxInliers = 0;
 	int nrTrials = calculateNrTrials(s, p, q);
 
 	for (int l = 0; l < nrTrials; l++) {
+
+		// choose 2 random points
+		Point2f p1 = points[rand() % N];
+		Point2f p2 = points[rand() % N];
 		// compute the line eq
 		Line * line = new Line(p1, p2);
 

@@ -22,8 +22,9 @@ const char KMEANS_IMAGES_PATH[6][PATH_SIZE] = {
 };
 
 void kmeans(std::vector<std::vector<float>> x, std::vector<std::vector<float>>& m, std::vector<int>& labels, int K, int maxIt);
+Mat voronoi(Mat img, std::vector<std::vector<float>> x, std::vector<std::vector<float>> m, std::vector<int> labels, std::vector<Vec3b> colors, int K);
 
-int main7()
+int main()
 {
 	int op = 0;
 	do {
@@ -52,6 +53,7 @@ int main7()
 					for (int j = 0; j < width; j++) {
 						if (img.at<uchar>(i, j) == 0) {
 							std::vector<float> p;
+							// 2D points
 							p.push_back(i);
 							p.push_back(j);
 							x.push_back(p);
@@ -78,6 +80,8 @@ int main7()
 					out.at<Vec3b>(i, j) = colors[labels[l]];
 				}
 				imshow("Labeled points", out);
+				Mat V = voronoi(img, x, m, labels, colors, k);
+				imshow("Voronoi", V);
 				waitKey(0);
 				break;
 				}
@@ -98,6 +102,7 @@ int main7()
 				for (int i = 0; i < height; i++) {
 					for (int j = 0; j < width; j++) {
 						std::vector<float> p;
+						// 1D points
 						p.push_back(img.at<uchar>(i, j));
 						x.push_back(p);
 					}
@@ -134,6 +139,7 @@ int main7()
 				for (int i = 0; i < height; i++) {
 					for (int j = 0; j < width; j++) {
 						std::vector<float> p;
+						// 3D points
 						p.push_back(img.at<Vec3b>(i, j)[0]);
 						p.push_back(img.at<Vec3b>(i, j)[1]);
 						p.push_back(img.at<Vec3b>(i, j)[2]);
@@ -162,6 +168,32 @@ int main7()
 	} while (op != 0);
 
 	return 0;
+}
+
+Mat voronoi(Mat img, std::vector<std::vector<float>> x, std::vector<std::vector<float>> m, std::vector<int> labels, std::vector<Vec3b> colors, int K) {
+	int height = img.rows;
+	int width = img.cols;
+	Mat out = Mat(height, width, CV_8UC3);
+
+	// find the closest mean for each of the points (also background)
+	for (int i = 0; i < height; i++) {
+		for (int j = 0; j < width; j++) {
+			float minDist = INT_MAX;
+			int label = 0;
+			for (int k = 0; k < K; k++) {
+				// Euclidean dist
+				float dist = sqrt((i - m[k][0]) * (i - m[k][0]) + (j - m[k][1]) * (j - m[k][1]));
+				if (dist < minDist) {
+					minDist = dist;
+					label = k;
+				}
+			}
+
+			out.at<Vec3b>(i, j) = colors[label];
+		}
+	}
+
+	return out;
 }
 
 void kmeans(std::vector<std::vector<float>> x, std::vector<std::vector<float>>& m, std::vector<int>& labels, int K, int maxIt) {

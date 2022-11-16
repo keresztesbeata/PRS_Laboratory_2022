@@ -254,8 +254,8 @@ void pdfForSingleFeature(Mat featureMat, int x) {
 
 	for (int k = 0; k < p; k++) {
 		int curr = featureMat.at<uchar>(k, x);
-		f[k] = f[k] * 255 / peak;
-		img.at<uchar>(255 - f[k], curr) = 0;
+		f[k] = 255 - f[k] * 255 / peak;
+		img.at<uchar>(f[k], curr) = 0;
 	}
 
 	imshow("Pdf for single feature", img);
