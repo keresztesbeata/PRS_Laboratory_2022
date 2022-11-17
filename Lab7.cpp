@@ -60,7 +60,8 @@ int main()
 						}
 					}
 				}
-				std::default_random_engine gen;
+				std::random_device r;
+				std::default_random_engine gen{ r() };
 				std::uniform_int_distribution<int> dist_color(0, 255);
 				std::vector<Vec3b> colors(k);
 				for (int i = 0; i < k; i++) {
@@ -200,13 +201,16 @@ void kmeans(std::vector<std::vector<float>> x, std::vector<std::vector<float>>& 
 	int N = x.size();
 	int d = x[0].size();
 	// initialization: randomly select k centers
-	std::default_random_engine gen;
+	std::random_device r;
+	std::default_random_engine gen{ r() };
 	std::uniform_int_distribution<int> dist_center(1, N);
+	for (int i = 0; i < K; i++) {
+		m[i] = x[dist_center(gen)];
+		std::cout << m[i][0] << " ";
+	}
+	std::cout<<std::endl;
 
 	for (int it = 0; it < maxIt; it++) {	
-		for (int i = 0; i < K; i++) {
-			m[i] = x[dist_center(gen)];
-		}
 		// assignment of points to closest cluster center
 		bool change = false;
 		for (int i = 0; i < N; i++) {
