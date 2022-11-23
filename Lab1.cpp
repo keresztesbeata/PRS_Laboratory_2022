@@ -273,8 +273,6 @@ void gradient_descent_1(int k, float lr) {
 		std::cout << "step: " << step << std::endl;
 
 		teta = new_teta.clone();
-		//std::cout << "teta = (" << teta.at<float>(0, 0) << ", " << teta.at<float>(1, 0) << ")" << std::endl;
-		//getchar();
 
 		// compute the loss
 		Mat grad(2, 1, CV_32FC1);

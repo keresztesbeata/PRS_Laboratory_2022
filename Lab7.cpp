@@ -24,7 +24,7 @@ const char KMEANS_IMAGES_PATH[6][PATH_SIZE] = {
 void kmeans(std::vector<std::vector<float>> x, std::vector<std::vector<float>>& m, std::vector<int>& labels, int K, int maxIt);
 Mat voronoi(Mat img, std::vector<std::vector<float>> x, std::vector<std::vector<float>> m, std::vector<int> labels, std::vector<Vec3b> colors, int K);
 
-int main()
+int main7()
 {
 	int op = 0;
 	do {
