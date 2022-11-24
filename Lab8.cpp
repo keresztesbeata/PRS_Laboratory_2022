@@ -5,8 +5,8 @@
 
 void calcHist(Mat img, int nr_bins, int * hist);
 void calcColorHist(Mat img, int nr_bins, int* hist);
-float calcDist(int hist_size, int* hp, Mat x);
-int knn(int nr_classes, Mat X, Mat y, Mat img, int index, int K);
+float calcDist(Mat x, int a, int b);
+int knn(int nr_classes, Mat X, Mat y, int unknown, int K);
 void confusionMatrix(Mat y, Mat y_pred, Mat& M);
 float calcAccuracy(Mat M);
 
@@ -34,8 +34,11 @@ int main()
 	// allocate feature matrix and label vector
 	int nrinst = 672;
 	int feature_dim = 3 * hist_size;
-	Mat X(nrinst, feature_dim, CV_32FC1);
-	Mat y(nrinst, 1, CV_8UC1);
+	Mat X_train(nrinst, feature_dim, CV_32FC1);
+	Mat y_train(nrinst, 1, CV_8UC1);
+
+	// load the train set
+	std::vector<Data> train_set(nrinst);
 
 	int nrFiles = 0;
 	for (int i = 0; i < nrclasses; i++) {
@@ -54,11 +57,13 @@ int main()
 			}
 			calcColorHist(img, hist_size, hist);
 			for (int d = 0; d < feature_dim; d++) {
-				X.at<float>(rowX, d) = hist[d];
+				X_train.at<float>(rowX, d) = hist[d];
 			}
 
 			free(hist);
-			y.at<uchar>(nrFiles, 0) = i;
+			y_train.at<uchar>(nrFiles, 0) = i;
+			std::string str(fname);
+			train_set[nrFiles] = { str, nrFiles };
 			rowX++;
 			nrFiles++;
 		}
@@ -99,28 +104,29 @@ int main()
 			rowX++;
 			nrTestFiles++;
 		}
-		// std::cout << rowX << std::endl;
 	}
-
-	auto rand_eng = std::default_random_engine{};
 
 	while(1) {
 		int K;
 		std::cout << "K = ";
 		std::cin >> K;
 
-		if (K > nrinst) {
-			std::cout << "Incorrect value! K should be smaller than the total nr of training samples (" << nrinst << ")!" << std::endl;
-		}
-
-		//std::shuffle(test_set.begin(), test_set.end(), rand_eng);
+		
+		int rand_sample = rand() % nrinst;
+		int pred_label = knn(nrclasses, X_train, y_train, rand_sample, K);
+		std::cout << "Sample:" << std::endl;
+		std::cout << "True label = " << classes[y_train.at<uchar>(rand_sample, 0)] << std::endl;
+		std::cout << "Predicted label = " << classes[pred_label] << std::endl;
+		Mat sample_img = imread(train_set[rand_sample].file);
+		imshow("Sample image", sample_img);
+		waitKey(0);
 
 		Mat y_pred(nrTestinst, 1, CV_8UC1);
 		y_pred.setTo(0);
 		// evaluate the model on the whole test set
 		for (int i = 0; i < nrTestinst; i++) {
 			Mat img = imread(test_set[i].file);
-			y_pred.at<uchar>(i, 0) = knn(nrclasses, X_test, y_test, img, i, K);
+			y_pred.at<uchar>(i, 0) = knn(nrclasses, X_test, y_test, i, K);
 		}
 
 		// compute the confusion matrix
@@ -130,14 +136,6 @@ int main()
 		// calculate the accuracy
 		float acc = calcAccuracy(M);
 		std::cout << "Accuracy = " << acc << std::endl;
-
-		std::cout << "Sample:" << std::endl;
-		int rand_sample = rand() % nrTestinst;
-		std::cout << "True label = " << classes[y_test.at<uchar>(rand_sample, 0)] << std::endl;
-		std::cout << "Predicted label = " << classes[y_pred.at<uchar>(rand_sample, 0)] << std::endl;
-		Mat test_img = imread(test_set[rand_sample].file);
-		imshow("Test image", test_img);
-		waitKey(0);
 
 		std::cout << "Continue (1) / Exit (0) ?" << std::endl;
 		std::cout << ">> ";
@@ -197,59 +195,53 @@ void calcColorHist(Mat img, int nr_bins, int * hist) {
 	}
 }
 
-float calcDist(int hist_size, int * hp, Mat x) {
-	// compute the Euclidean dist
+float calcDist(Mat x, int a, int b) {
+	// compute the Euclidean dist between feature a and b
 	float dist = 0;
-	for (int i = 0; i < hist_size; i++) {
-		dist += pow(hp[i] - x.at<float>(0,i), 2);
+	for (int i = 0; i < x.cols; i++) {
+		dist += pow(x.at<float>(a, i) - x.at<float>(b, i), 2);
 	}
 	return sqrt(dist);
 }
 
-int knn(int nr_classes, Mat X, Mat y, Mat img, int idx, int K) {
+int knn(int nr_classes, Mat X, Mat y, int unknown, int K) {
 	int n = X.rows;
 	int d = X.cols;
-	int* hist = (int*)malloc(sizeof(int) * d);
-	calcColorHist(img, d/3, hist);
-	std::cout << "------------------ HISTOGRAM --------------------" << std::endl;
-	for (int i = 0; i < d; i++) {
-		std::cout << hist[i] << " ";
-	}
-	std::cout << std::endl;
 	std::vector<Distance> distances;
 	for (int i = 0; i < n; i++) {
-		if (i != idx) {
-			float dist = calcDist(d, hist, X.row(i));
+		if (i != unknown) {
+			float dist = calcDist(X, unknown, i);
 			distances.push_back({ dist, y.at<uchar>(i, 0) });
 		}
 	}
-	free(hist);
 	std::sort(distances.begin(), distances.end());
 	// vote histogram Cx1
 	int C = nr_classes;
-	Mat h(C, 1, CV_32SC1);
+	std::vector<int> votes(C);
 	// initialize votes to 0
-	h.setTo(0);
+	for (int i = 0; i < C; i++) {
+		votes[i] = 0;
+	}
 	int maxH = 0;
 	int label = -1;
 	// count the votes
 	std::cout << "------------------ DIST --------------------" << std::endl;
 	for (int j = 0; j < K; j++) {
-		if (idx != j) {
-			std::cout << distances[j].dist << std::endl;
-			h.at<int>(distances[j].label, 0)++;
-		}
+		std::cout << distances[j].dist << " ";
+		votes[distances[j].label]++;
 	}
+	std::cout << std::endl;
 	for (int i = 0; i < C; i++) {
-		if (h.at<int>(i, 0) > maxH) {
-			maxH = h.at<int>(i, 0);
+		if (votes[i] > maxH) {
+			maxH = votes[i];
 			label = i;
 		}
 	}
 	std::cout << "\n------------------ VOTES --------------------" << std::endl;
 	for (int i = 0; i < C; i++) {
-		std::cout << h.at<int>(i, 0)<< " ";
+		std::cout << votes[i] << " ";
 	}
+	std::cout << std::endl;
 	return label;
 }
 
