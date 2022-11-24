@@ -23,7 +23,7 @@ typedef struct data {
 	int label;
 }Data;
 
-int main()
+int main8()
 {
 	const int nrclasses = 6;
 	char classes[nrclasses][10] = { "beach", "city", "desert", "forest", "landscape", "snow" };
@@ -67,7 +67,6 @@ int main()
 			rowX++;
 			nrFiles++;
 		}
-		// std::cout << rowX << std::endl;
 	}
 
 	int nrTestinst = 85;
@@ -125,7 +124,6 @@ int main()
 		y_pred.setTo(0);
 		// evaluate the model on the whole test set
 		for (int i = 0; i < nrTestinst; i++) {
-			Mat img = imread(test_set[i].file);
 			y_pred.at<uchar>(i, 0) = knn(nrclasses, X_test, y_test, i, K);
 		}
 
