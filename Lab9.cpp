@@ -205,7 +205,6 @@ int classifyBayes(Mat X, Mat priors, Mat likelihood) {
 			}
 		}
 	}
-	std::cout << "Posterior prob = "<<max << std::endl;
 	return label;
 }
 
