@@ -14,7 +14,7 @@ typedef struct data {
 	int label;
 }Data;
 
-int main()
+int main9()
 {
 	const int C = 2;// 3;
 	// allocate feature matrix and label vector
