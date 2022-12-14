@@ -4,7 +4,8 @@
 
 
 int NR_IMAGES = 7;
-void perceptron(Mat img, Mat X, Mat y, Mat& w, double lr, double errorLimit, int maxIter);
+void batchPerceptron(Mat img, Mat X, Mat y, Mat& w, double lr, double errorLimit, int maxIter);
+void onlinePerceptron(Mat img, Mat X, Mat y, Mat& w, double lr, double errorLimit, int maxIter);
 void showDecisionBoundary(Mat img, Mat w);
 
 int main()
@@ -47,12 +48,13 @@ int main()
 		Y_train.at<int>(i, 0) = y_train[i];
 	}
 	double errorLimit = pow(10, -5);
-	double learningRate = pow(10, -4);
+	double learningRate = pow(10, -2);
 	Mat w(1, 3, CV_64FC1);
 	w.setTo(0.1);
+	w.at<double>(0, 2) *= -1;
 	int maxIter = pow(10, 5);
 
-	perceptron(img, X_train, Y_train, w, learningRate, errorLimit, maxIter);
+	onlinePerceptron(img, X_train, Y_train, w, learningRate, errorLimit, maxIter);
 	showDecisionBoundary(img, w);
 	
 	return 0;
@@ -61,15 +63,15 @@ int main()
 void showDecisionBoundary(Mat img, Mat w) {
 	Mat outImg = img.clone();
 	int x1 = 0;
-	int x2 = img.cols - 1;
-	int y1 = x1 * w.at<double>(0, 2) + x1 * w.at<double>(0, 1) + w.at<double>(0, 0);
-	int y2 = x2 * w.at<double>(0, 2) + x2 * w.at<double>(0, 1) + w.at<double>(0, 0);
-	line(outImg, Point2d(x1, -y1), Point2d(x2, -y2), GREEN);
+	int x2 = img.cols-1;
+	int y1 = -(x1 * w.at<double>(0, 2) + w.at<double>(0, 0)) / w.at<double>(0, 1);
+	int y2 = -(x2 * w.at<double>(0, 2) + w.at<double>(0, 0)) / w.at<double>(0, 1);
+	line(outImg, Point2d(x1, y1), Point2d(x2, y2), GREEN);
 	imshow("output", outImg);
 	waitKey(0);
 }
 
-void perceptron(Mat img, Mat X, Mat y, Mat& w, double lr, double errorLimit, int maxIter) {
+void batchPerceptron(Mat img, Mat X, Mat y, Mat& w, double lr, double errorLimit, int maxIter) {
 	int N = X.rows;
 	int d = X.cols;
 	Mat z(N, 1, CV_64FC1);
@@ -91,17 +93,13 @@ void perceptron(Mat img, Mat X, Mat y, Mat& w, double lr, double errorLimit, int
 				grad.at<double>(0, 2) -= y.at<int>(i, 0) * X.at<uchar>(i, 2);
 				error++;
 				loss -= y.at<int>(i, 0) * z.at<double>(i, 0);
-				// update weights
-				w.at<double>(0, 0) += lr * y.at<int>(i, 0) * X.at<uchar>(i, 0);
-				w.at<double>(0, 1) += lr * y.at<int>(i, 0) * X.at<uchar>(i, 1);
-				w.at<double>(0, 2) += lr * y.at<int>(i, 0) * X.at<uchar>(i, 2);
 				
 				std::cout << "wrong" << std::endl;
 				std::cout << "update w0 = w0 " << (y.at<int>(i, 0) < 0 ? "-" : "+") <<lr <<"*" << w.at<double>(0, 0) << ", w1 = w1 " << (y.at<int>(i, 0) < 0 ? "-" : "+") << lr << "*" << w.at<double>(0, 1) << ", w2 = w2 " << (y.at<int>(i, 0) < 0 ? "-" : "+") << lr << " * " << w.at<double>(0, 2) << std::endl;
 			}
 			std::cout << "i=" << i << ": w=[" << w.at<double>(0, 0) << "," << w.at<double>(0, 1) << "," << w.at<double>(0, 2) << "]";
 			std::cout << " xi=[" << int(X.at<uchar>(i, 0)) << "," << int(X.at<uchar>(i, 1)) << "," << int(X.at<uchar>(i, 2)) << "] yi=" << y.at<int>(i, 0) << " zi=" << z.at<double>(i, 0) << std::endl;
-			showDecisionBoundary(img, w);
+			//showDecisionBoundary(img, w);
 		}
 		error /= (double)lr;
 		loss /= (double)lr;
@@ -116,5 +114,42 @@ void perceptron(Mat img, Mat X, Mat y, Mat& w, double lr, double errorLimit, int
 		w.at<double>(0, 0) -= lr * grad.at<double>(0, 0);
 		w.at<double>(0, 1) -= lr * grad.at<double>(0, 1);
 		w.at<double>(0, 2) -= lr * grad.at<double>(0, 2);
+	}
+}
+
+
+void onlinePerceptron(Mat img, Mat X, Mat y, Mat& w, double lr, double errorLimit, int maxIter) {
+	int N = X.rows;
+	int d = X.cols;
+	Mat z(N, 1, CV_64FC1);
+	z.setTo(0);
+	for (int iter = 0; iter < maxIter; iter++) {
+		std::cout << "Iteration " << iter << std::endl;
+		double error = 0;
+		for (int i = 0; i < N; i++) {
+			for (int j = 0; j < d; j++) {
+				z.at<double>(i, 0) += w.at<double>(0, j) * X.at<uchar>(i, j);
+			}
+			if (z.at<double>(i, 0) * y.at<int>(i, 0) <= 0) {
+				error++;
+				// update weights
+				w.at<double>(0, 0) += lr * y.at<int>(i, 0) * X.at<uchar>(i, 0);
+				w.at<double>(0, 1) += lr * y.at<int>(i, 0) * X.at<uchar>(i, 1);
+				w.at<double>(0, 2) += lr * y.at<int>(i, 0) * X.at<uchar>(i, 2);
+
+				std::cout << "wrong" << std::endl;
+				std::cout << "update w0 = w0 " << (y.at<int>(i, 0) < 0 ? "-" : "+") << lr << "*" << w.at<double>(0, 0) << ", w1 = w1 " << (y.at<int>(i, 0) < 0 ? "-" : "+") << lr << "*" << w.at<double>(0, 1) << ", w2 = w2 " << (y.at<int>(i, 0) < 0 ? "-" : "+") << lr << " * " << w.at<double>(0, 2) << std::endl;
+			}
+			std::cout << "i=" << i << ": w=[" << w.at<double>(0, 0) << "," << w.at<double>(0, 1) << "," << w.at<double>(0, 2) << "]";
+			std::cout << " xi=[" << int(X.at<uchar>(i, 0)) << "," << int(X.at<uchar>(i, 1)) << "," << int(X.at<uchar>(i, 2)) << "] yi=" << y.at<int>(i, 0) << " zi=" << z.at<double>(i, 0) << std::endl;
+			//showDecisionBoundary(img, w);
+		}
+		error /= (double)lr;
+		std::cout << "error: " << error << std::endl;
+
+		if (error < errorLimit) {
+			std::cout << "All classified correctly" << std::endl;
+			break;
+		}
 	}
 }
