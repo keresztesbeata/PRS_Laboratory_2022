@@ -8,7 +8,7 @@ void batchPerceptron(Mat img, Mat X, Mat y, Mat& w, double lr, double errorLimit
 void onlinePerceptron(Mat img, Mat X, Mat y, Mat& w, double lr, double errorLimit, int maxIter);
 void showDecisionBoundary(Mat img, Mat w);
 
-int main()
+int main10()
 {
 	// allocate feature matrix and label vector
 
